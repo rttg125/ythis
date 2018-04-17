@@ -1,0 +1,21 @@
+{
+  "scripts": {
+    "start": "node server.js"
+  },
+  "name": "kfinfo_api",
+  "version": "1.0.0",
+  "description": "kfinfo api",
+  "main": "server.js",
+  "dependencies": {
+    "body-parser": "^1.18.2",
+    "express": "^4.16.2",
+    "mssql": "^4.1.0",
+    "tedious": "^2.3.1"
+  },
+  "devDependencies": {},
+  "keywords": [
+    "api"
+  ],
+  "author": "wxyun",
+  "license": "ISC"
+}
