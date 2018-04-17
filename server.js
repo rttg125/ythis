@@ -6,15 +6,6 @@ app.use(bodyParser.json()); // for parsing application/json
 app.use(bodyParser.urlencoded({ extended: true })); // for parsing application/x-www-form-urlencoded
 
 // Connection string parameters.
-/*var sqlConfig = {
-    user: 'SA',
-    password: '<PassW0rd!>',
-    server: 'gas.mimemo.cn',
-    database: 'ythis',
-    options: {
-        encrypt: true 
-    }
-}*/
 var sqlConfig = {
     user: 'sa',
     password: '1055',
