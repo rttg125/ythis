@@ -24,7 +24,7 @@ app.get('/user', function (req, res) {
     res.writeHead(200,{'Content-Type':'application/json;charset=utf-8'});//设置response编码为utf-8
     sql.connect(sqlConfig, function() {
         var request = new sql.Request();
-        var sqlc = 'SELECT TOP 3 编号 as id, 名称 as name, 性别 as sex,  出生日期 as birthday,  身份证号 as idcard,  联系电话 as mobile,  卡片编码 as card FROM  D病员档案 ';
+        var sqlc = 'SELECT TOP 3 编号 as patient_id, 名称 as name, 性别 as sex,  出生日期 as birthday,  身份证号 as idcard,  联系电话 as mobile,  卡片编码 as card FROM  D病员档案 ';
         request.query(sqlc, function(err, recordset) {
             if(err){
                 console.log(err);
@@ -42,7 +42,7 @@ app.post('/user', function (req, res) {
     var card = req.body.card;           //  请求需要的卡片编码
     sql.connect(sqlConfig, function() {
         var request = new sql.Request();
-        var sqlc = "SELECT 编号 as userid, 名称 as name, 性别 as sex,  出生日期 as birthday,  身份证号 as idcard,  联系电话 as mobile,  卡片编码 as card FROM  D病员档案 where 联系电话 = '"+mobile+"' and 卡片编码 = '"+card+"'";
+        var sqlc = "SELECT 编号 as patient_id, 名称 as name, 性别 as sex,  出生日期 as birthday,  身份证号 as idcard,  联系电话 as mobile,  卡片编码 as card FROM  D病员档案 where 联系电话 = '"+mobile+"' and 卡片编码 = '"+card+"'";
         request.query(sqlc, function(err, recordset) {
             if(err){
                 console.log(err);
