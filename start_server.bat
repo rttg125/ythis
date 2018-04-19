@@ -1,2 +1,2 @@
 git pull
-npm install && npm run start
+yarn install && npm run start
