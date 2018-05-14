@@ -127,7 +127,7 @@ app.get('/list/:id', function (req, res) {
     sql.connect(sqlConfig, function() {
         var request = new sql.Request();
         var sqlc = "select 名称 ,单位,数量 ,金额  from ( select   b.名称 ,b.计量单位 As 单位, "
-            +"sum(a.数量) 数量 , sum(a.金额) As 金额 From D住院记帐列表 a"
+            +"sum(a.数量) 数量 , sum(a.金额) As 金额 From D住院记帐列表 a "
       		+"Inner Join T收费项目 b ON b.编号=a.费用明细 WHERE A.记帐方式 <> '处方记帐' "
       		+"And A.作废=0  AND  住院编号= "+ id +" group by  b.名称 ,b.计量单位 Union All "
       		+"select   C.名称 ,C.药品单位 As 单位, SUM(B.数量)数量 , sum(B.单项金额) As 金额 "
@@ -136,6 +136,7 @@ app.get('/list/:id', function (req, res) {
      		+"And A.作废=0 and 已被记帐=1 group by C.名称 ,C.药品单位  ) w"
         request.query(sqlc, function(err, recordset) {
             if(err){
+            	res.end(JSON.stringify(error),'utf-8')
                 console.log(err);
             }
             res.end(JSON.stringify(recordset),'utf-8'); // Result in JSON format
