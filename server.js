@@ -144,3 +144,53 @@ app.get('/list/:id', function (req, res) {
         });
     });
 });
+
+/* 
+* 根据档案号获取用户的检验报告
+*/
+app.get('/jybg/:id', function (req, res) {
+    res.writeHead(200,{'Content-Type':'application/json;charset=utf-8'});//设置response编码为utf-8
+    var header = req.header('User-Agent');
+    if(header !== "application/sunseen-api"){
+		res.status(400).end('Bad Request');
+    }
+    var id =  req.params.id;// 住院编号id
+    sql.connect(sqlConfig, function() {
+        var request = new sql.Request();
+        var sqlc = "SELECT 序号 , IsNull(CONVERT(varchar(10),检验日期,23),'1900-01-01')检验日期 ,"
+        +"标本类型, 临床诊断  FROM   D检验报告单 WHERE   (档案号 = "+id+" )  order by   检验日期 desc "
+        request.query(sqlc, function(err, recordset) {
+            if(err){
+            	res.end(JSON.stringify(error),'utf-8')
+                console.log(err);
+            }
+            res.end(JSON.stringify(recordset),'utf-8'); // Result in JSON format
+            sql.close();
+        });
+    });
+});
+
+/* 
+* 根据检验报告单号获取用户的检验报告详情
+*/
+app.get('/jybgxq/:id', function (req, res) {
+    res.writeHead(200,{'Content-Type':'application/json;charset=utf-8'});//设置response编码为utf-8
+    var header = req.header('User-Agent');
+    if(header !== "application/sunseen-api"){
+		res.status(400).end('Bad Request');
+    }
+    var id =  req.params.id;// 住院编号id
+    sql.connect(sqlConfig, function() {
+        var request = new sql.Request();
+        var sqlc = "SELECT   项目名称, 结果值, 结论,  参考值 FROM  D检验报告明细 "
+					+"WHERE     (序号 = "+id +" ) order by 排序号"
+        request.query(sqlc, function(err, recordset) {
+            if(err){
+            	res.end(JSON.stringify(error),'utf-8')
+                console.log(err);
+            }
+            res.end(JSON.stringify(recordset),'utf-8'); // Result in JSON format
+            sql.close();
+        });
+    });
+});
