@@ -208,6 +208,69 @@ app.get('/jybg/:id', function (req, res) {
     });
 });
 
+/*
+* 根据住院号和日期获取用户的住院详情单
+*/
+app.get('/list/:id/date/:date', function (req, res) {
+    res.writeHead(200,{'Content-Type':'application/json;charset=utf-8'});//设置response编码为utf-8
+    var header = req.header('User-Agent');
+    if(header !== "application/sunseen-api"){
+		res.status(400).end('Bad Request');
+    }
+    var id =  req.params.id;// 住院编号id
+    var date =  req.params.date;// 选择的时间
+    sql.connect(sqlConfig, function() {
+        var request = new sql.Request();
+        var sqlc = " select 名称 ,单位,数量 ,金额 from ("
+            +"select   b.名称 ,b.计量单位 As 单位,"
+               +"sum(a.数量) 数量 , sum(a.金额) As 金额"
+               +" From D住院记帐列表 a"
+                +" Inner Join T收费项目 b ON b.编号=a.费用明细"
+                 +"  WHERE A.记帐方式 <> '处方记帐'  And A.作废=0  AND  住院编号= "+id
+                 +"  and   IsNull(CONVERT(varchar(10),A. 记帐时间,23),'1900-01-01') = '"+date+"'  "
+                 +"  group by  b.名称 ,b.计量单位 "
+                 +"  Union All "
+                +"  select   C.名称 ,C.药品单位 As 单位,"
+            +"  SUM(B.数量)数量 , sum(B.单项金额) As 金额 from  D住院划价单 A "
+              +"   Inner Join D住院划价数据 B On A.序号 = B.序号 "
+               +" Inner Join T药品卫材 C On B.药品编号= C.编号 "
+               +" where  住院编号= '"+id+"'     And A.作废=0 and 已被记帐=1 and   IsNull(CONVERT(varchar(10),A.过单时间,23),'1900-01-01') = '"+date+"' "
+               +" group by C.名称 ,C.药品单位    ) w ;"
+        request.query(sqlc, function(err, recordset) {
+            if(err){
+                console.log(err);
+            }
+            res.end(JSON.stringify(recordset),'utf-8'); // Result in JSON format
+            sql.close();
+        });
+    });
+});
+
+/* 
+* 根据住院号获取用户的住院预交清单.
+*/
+app.get('/prepayment/:id', function (req, res) {
+    res.writeHead(200,{'Content-Type':'application/json;charset=utf-8'});//设置response编码为utf-8
+    var header = req.header('User-Agent');
+    if(header !== "application/sunseen-api"){
+		res.status(400).end('Bad Request');
+    }
+    var id =  req.params.id;// 住院编号id
+    sql.connect(sqlConfig, function() {
+        var request = new sql.Request();
+        var sqlc = "SELECT   姓名, 性别, 入院时间, 当前床位, 预交金额, 欠费金额 "     
+            +" FROM    W病人信息  where  编号 = "+id+"   and 在院 = '1'"
+        request.query(sqlc, function(err, recordset) {
+            if(err){
+            	res.end(JSON.stringify(error),'utf-8')
+                console.log(err);
+            }
+            res.end(JSON.stringify(recordset),'utf-8'); // Result in JSON format
+            sql.close();
+        });
+    });
+});
+
 /* 
 * 根据检验报告单号获取用户的检验报告详情
 */
