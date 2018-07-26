@@ -43,8 +43,6 @@ var server = app.listen(8081, function () {
 */
 app.post('/user', function (req, res) {
     res.writeHead(200,{'Content-Type':'application/json;charset=utf-8'});//设置response编码为utf-8
-    //var name = req.body.name;
-    //var idcard = req.body.idcard;
     var header = req.header('User-Agent');
     if(header !== "application/sunseen-api"){
 		res.status(400).end('Bad Request');
@@ -136,7 +134,7 @@ app.get('/list/:id', function (req, res) {
      		+"And A.作废=0 and 已被记帐=1 group by C.名称 ,C.药品单位  ) w"
         request.query(sqlc, function(err, recordset) {
             if(err){
-            	res.end(JSON.stringify(error),'utf-8')
+            	res.end(JSON.stringify(err),'utf-8')
                 console.log(err);
             }
             res.end(JSON.stringify(recordset),'utf-8'); // Result in JSON format
@@ -199,7 +197,7 @@ app.get('/jybg/:id', function (req, res) {
         +"标本类型, 临床诊断  FROM   D检验报告单 WHERE   (档案号 = "+id+" )  order by   检验日期 desc "
         request.query(sqlc, function(err, recordset) {
             if(err){
-            	res.end(JSON.stringify(error),'utf-8')
+            	res.end(JSON.stringify(err),'utf-8')
                 console.log(err);
             }
             res.end(JSON.stringify(recordset),'utf-8'); // Result in JSON format
@@ -262,7 +260,7 @@ app.get('/prepayment/:id', function (req, res) {
             +" FROM    W病人信息  where  编号 = "+id+"   and 在院 = '1'"
         request.query(sqlc, function(err, recordset) {
             if(err){
-            	res.end(JSON.stringify(error),'utf-8')
+            	res.end(JSON.stringify(err),'utf-8')
                 console.log(err);
             }
             res.end(JSON.stringify(recordset),'utf-8'); // Result in JSON format
@@ -270,6 +268,56 @@ app.get('/prepayment/:id', function (req, res) {
         });
     });
 });
+
+/* 
+* 根据病员编号获取用户的门诊交费清单.
+*/
+app.get('/payment/:id', function (req, res) {
+    res.writeHead(200,{'Content-Type':'application/json;charset=utf-8'});//设置response编码为utf-8
+    var header = req.header('User-Agent');
+    if(header !== "application/sunseen-api"){
+		res.status(400).end('Bad Request');
+    }
+    var id =  req.params.id;// 病员编号
+    sql.connect(sqlConfig, function() {
+        var request = new sql.Request();
+        var sqlc = "SELECT *  FROM   w_门诊待交  where  病员编号 = "+id
+        request.query(sqlc, function(err, recordset) {
+            if(err){
+            	res.end(JSON.stringify(err),'utf-8')
+                console.log(err);
+            }
+            res.end(JSON.stringify(recordset),'utf-8'); // Result in JSON format
+            sql.close();
+        });
+    });
+});
+
+
+/* 
+* 根据病员编号获取用户的门诊交费清单.
+*/
+app.get('/payment/info/:id', function (req, res) {
+    res.writeHead(200,{'Content-Type':'application/json;charset=utf-8'});//设置response编码为utf-8
+    var header = req.header('User-Agent');
+    if(header !== "application/sunseen-api"){
+		res.status(400).end('Bad Request');
+    }
+    var id =  req.params.id;// 业务号
+    sql.connect(sqlConfig, function() {
+        var request = new sql.Request();
+        var sqlc = "SELECT *  FROM   V_门诊代缴明细  where  就诊序号 = "+id
+        request.query(sqlc, function(err, recordset) {
+            if(err){
+            	res.end(JSON.stringify(err),'utf-8')
+                console.log(err);
+            }
+            res.end(JSON.stringify(recordset),'utf-8'); // Result in JSON format
+            sql.close();
+        });
+    });
+});
+
 
 /* 
 * 根据检验报告单号获取用户的检验报告详情
@@ -287,7 +335,69 @@ app.get('/jybgxq/:id', function (req, res) {
 					+"WHERE     (序号 = "+id +" ) order by 排序号"
         request.query(sqlc, function(err, recordset) {
             if(err){
-            	res.end(JSON.stringify(error),'utf-8')
+            	res.end(JSON.stringify(err),'utf-8')
+                console.log(err);
+            }
+            res.end(JSON.stringify(recordset),'utf-8'); // Result in JSON format
+            sql.close();
+        });
+    });
+});
+
+/* 
+* 根据住院编号和充值类型给病人微信支付充值
+* 类型：1、住院预交；2、门诊交费；3、挂号
+*
+*
+*/
+app.post('/payments', function (req, res) {
+    res.writeHead(200,{'Content-Type':'application/json;charset=utf-8'});//设置response编码为utf-8
+    var header = req.header('User-Agent');
+    if(header !== "application/sunseen-api"){
+		res.status(400).end('Bad Request');
+    }        
+    var dangan_id = req.body.dangan_id;       
+    var zhuyuan_id = req.body.zhuyuan_id?req.body.zhuyuan_id:0;        
+    var yewu_id = req.body.yewu_id?req.body.yewu_id:0;          
+    var order_id = req.body.order_id;
+    var pay_id = req.body.pay_id;
+    var pay_total = req.body.pay_total;
+    var type = req.body.type;
+    var time = req.body.time;
+    sql.connect(sqlConfig, function() {
+        var request = new sql.Request();
+        var sqlc = "insert into w支付 (住院号,业务号, 档案号, 订单号, 结算号, 金额, 时间, 类型 ) values( " +        
+            zhuyuan_id +','+yewu_id +','+ dangan_id+','+order_id+','+pay_id+','+pay_total+',\''+ time +'\','+type
+         +")"; 
+         console.log(sqlc);
+        request.query(sqlc, function(err, recordset) {
+            if(err){
+            	res.end(JSON.stringify(err),'utf-8')
+                console.log(err);
+            }
+            res.end(JSON.stringify(recordset),'utf-8'); // Result in JSON format
+            sql.close();
+        });
+    });
+});
+
+/* 
+* 根据病员编号获取该病员所有的就诊记录
+*/
+app.get('/getscore/:id', function (req, res) {
+    res.writeHead(200,{'Content-Type':'application/json;charset=utf-8'});//设置response编码为utf-8
+    var header = req.header('User-Agent');
+    if(header !== "application/sunseen-api"){
+		res.status(400).end('Bad Request');
+    }
+    var id =  req.params.id;// 住院编号id
+    sql.connect(sqlConfig, function() {
+        var request = new sql.Request();
+        var sqlc = "Select * FROM   w就诊记录 "
+			+"WHERE     (病员编号 = "+id +" ) order by 就诊时间 DESC"
+        request.query(sqlc, function(err, recordset) {
+            if(err){
+            	res.end(JSON.stringify(err),'utf-8')
                 console.log(err);
             }
             res.end(JSON.stringify(recordset),'utf-8'); // Result in JSON format
