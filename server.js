@@ -375,7 +375,7 @@ app.post('/payments', function (req, res) {
     var zhuyuan_id = req.body.zhuyuan_id?req.body.zhuyuan_id:0;        
     var keshi_id = req.body.keshi_id?req.body.keshi_id:0;        
     var yewu_id = req.body.yewu_id?req.body.yewu_id:0;          
-    var guahao_date = req.body.guahao_date?req.body.guahao_date:'';          
+    var guahao_date = req.body.guahao_date?req.body.guahao_date:'2018-01-01';          
     var order_id = req.body.order_id;
     var pay_id = req.body.pay_id;
     var pay_total = req.body.pay_total;
@@ -385,8 +385,8 @@ app.post('/payments', function (req, res) {
     sql.connect(sqlConfig, function() {
         var request = new sql.Request();
         var sqlc = "insert into w支付 (住院号,业务号, 挂号日期,科室号, 档案号, 订单号, 结算号, 金额, 时间, 类型, 备注 ) values( " +        
-            zhuyuan_id +','+yewu_id +','+guahao_date +','+ keshi_id +','+dangan_id+','+order_id+','+pay_id+','+pay_total+','+ time +','+type+','+remarks
-         +")"; 
+            zhuyuan_id +','+yewu_id +',\''+guahao_date +'\','+ keshi_id +','+dangan_id+',\''+order_id+'\',\''+pay_id+'\',\''+pay_total+'\',\''+ time +'\','+type+',\''+remarks
+            +"\')"; 
          console.log(sqlc);
         request.query(sqlc, function(err, recordset) {
             if(err){
@@ -488,11 +488,13 @@ app.post('/patient', function (req, res) {
     var card = req.body.ecard?req.body.ecard:req.body.card
     var birthday = req.body.birthday
 
-
     sql.connect(sqlConfig, function() {
         var request = new sql.Request();
         var sqla = "SELECT 编号 as patient_id, 名称 as name, 性别 as sex,  出生日期 as birthday,  身份证号 as idcard, "
         +" 联系电话 as mobile,  卡片编码 as card FROM  D病员档案 where 联系电话 = '"+mobile+"' and 名称 = '"+name+"' and 身份证号 = '"+idcard+"'";
+        
+        var sqlb = "Insert Into  D病员档案 ( 名称, 性别,身份证号,出生日期,卡片编码,联系电话,五笔简码,拼音简码, 有效状态, 备注 ) values "
+        +" (\'"+name+"\',\'"+sex+"\',\'"+idcard+"\',\'"+birthday+"\',\'"+card+"\',\'"+mobile+"\',dbo.GetWB(\'"+name+"\'),dbo.GetPY(\'"+name+"\'),\'可用\',\'微信\')";
         // console.log("Part1:"+sqla+"\n");
         request.query(sqla, function(err, data) {
             if(err){
@@ -504,16 +506,12 @@ app.post('/patient', function (req, res) {
                 res.end(JSON.stringify(data),'utf-8'); // Result in JSON format 
                 sql.close(); 
             }else{
-                var sqlb = "Insert Into  D病员档案 ( 名称, 性别,身份证号,出生日期,卡片编码,联系电话,五笔简码,拼音简码, 有效状态, 备注 ) values "
-                +" (\'"+name+"\',\'"+sex+"\',\'"+idcard+"\',\'"+birthday+"\',\'"+card+"\',\'"+mobile+"\',dbo.GetWB(\'"+name+"\'),dbo.GetPY(\'"+name+"\'),\'可用\',\'微信\')";
                 //  console.log("Part2:"+sqlb+"\n");
                 request.query(sqlb, function(err, data) {
                     if(err){
                         console.log("err2:"+err);
                     }
-                    //  console.log("recordset2:"+JSON.stringify(data));
-                    // res.end(JSON.stringify(recordset),'utf-8'); // Result in JSON format
-                    // sql.close();
+                   
                 });
                  console.log("Part3:"+sqla+"\n");
                 request.query(sqla, function(err, data) {
