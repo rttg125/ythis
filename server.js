@@ -505,7 +505,7 @@ app.post('/patient', function (req, res) {
             if(err){
                 res.end(JSON.stringify('err'),'utf-8')
             }
-            console.log("recordset:"+JSON.stringify(recordset));
+            console.log("recordset1:"+JSON.stringify(recordset));
             res.end(JSON.stringify(recordset),'utf-8'); // Result in JSON format
             sql.close();
         });
@@ -526,7 +526,6 @@ app.post('/patientinfo', function (req, res) {
 	var mobile = req.body.mobile      //  联系电话
     var name = req.body.name
     var idcard = req.body.idcard
-    console.log(req.body);
     sql.connect(sqlConfig, function() {
         var request = new sql.Request();
         var sqla = "SELECT 编号 as patient_id, 名称 as name, 性别 as sex,  出生日期 as birthday,  身份证号 as idcard, "
@@ -536,7 +535,7 @@ app.post('/patientinfo', function (req, res) {
             if(err){
                 res.end(JSON.stringify(data),'utf-8'); // Result in JSON format 
             }else{
-                console.log("recordset:"+JSON.stringify(data));
+                console.log("recordset2:"+JSON.stringify(data));
                 res.end(JSON.stringify(data),'utf-8'); // Result in JSON format 
             }  
             sql.close(); 
