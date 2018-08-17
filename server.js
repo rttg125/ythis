@@ -11,6 +11,14 @@ var sqlConfig = {
     password: '1055',
     server: 'localhost',
     database: 'ythis',
+    // options:{
+    //     encrypr: true
+    // },    
+    pool: {
+	    min: 0,
+	    max: 10,
+	    idleTimeoutMillis: 3000
+  }
 }
 function getDate() {
     var date = new Date();
@@ -361,7 +369,7 @@ app.get('/jybgxq/:id', function (req, res) {
 
 /* 
 * 根据住院编号和充值类型给病人微信支付充值
-* 类型：1、住院预交；2、门诊交费；3、挂号
+* 类型：1、住院预交；2、门诊交费；3、挂号;4、自助建卡；5、其他收费
 *
 *
 */
@@ -490,39 +498,48 @@ app.post('/patient', function (req, res) {
 
     sql.connect(sqlConfig, function() {
         var request = new sql.Request();
+        var sqlb = "Insert Into  D病员档案 ( 名称, 性别,身份证号,出生日期,卡片编码,联系电话,五笔简码,拼音简码, 有效状态, 备注 ) values "
+        +" (\'"+name+"\',\'"+sex+"\',\'"+idcard+"\',\'"+birthday+"\',\'"+card+"\',\'"+mobile+"\',dbo.GetWB(\'"+name+"\'),dbo.GetPY(\'"+name+"\'),\'可用\',\'微信\')";
+        
+        request.query(sqlb, function(err, recordset) {
+            if(err){
+                res.end(JSON.stringify('err'),'utf-8')
+            }
+            console.log("recordset:"+JSON.stringify(recordset));
+            res.end(JSON.stringify(recordset),'utf-8'); // Result in JSON format
+            sql.close();
+        });
+    });
+	
+});
+
+//查询该病员是否已在HIS系统中
+
+app.post('/patientinfo', function (req, res) {
+    res.writeHead(200,{'Content-Type':'application/json;charset=utf-8'});//设置response编码为utf-8
+    var header = req.header('User-Agent');
+    if(header !== "application/sunseen-api"){
+		res.status(400).end('Bad Request');
+    }
+    // res.end(req); // Result in JSON format 
+
+	var mobile = req.body.mobile      //  联系电话
+    var name = req.body.name
+    var idcard = req.body.idcard
+    console.log(req.body);
+    sql.connect(sqlConfig, function() {
+        var request = new sql.Request();
         var sqla = "SELECT 编号 as patient_id, 名称 as name, 性别 as sex,  出生日期 as birthday,  身份证号 as idcard, "
         +" 联系电话 as mobile,  卡片编码 as card FROM  D病员档案 where 联系电话 = '"+mobile+"' and 名称 = '"+name+"' and 身份证号 = '"+idcard+"'";
         
-        var sqlb = "Insert Into  D病员档案 ( 名称, 性别,身份证号,出生日期,卡片编码,联系电话,五笔简码,拼音简码, 有效状态, 备注 ) values "
-        +" (\'"+name+"\',\'"+sex+"\',\'"+idcard+"\',\'"+birthday+"\',\'"+card+"\',\'"+mobile+"\',dbo.GetWB(\'"+name+"\'),dbo.GetPY(\'"+name+"\'),\'可用\',\'微信\')";
-        // console.log("Part1:"+sqla+"\n");
         request.query(sqla, function(err, data) {
             if(err){
-                console.log(err);
-                // res.end(JSON.stringify('error'),'utf-8');
-            }
-            // console.log("recordset1:"+JSON.stringify(data));
-            if(data.rowsAffected[0] > 0){
                 res.end(JSON.stringify(data),'utf-8'); // Result in JSON format 
-                sql.close(); 
             }else{
-                //  console.log("Part2:"+sqlb+"\n");
-                request.query(sqlb, function(err, data) {
-                    if(err){
-                        console.log("err2:"+err);
-                    }
-                   
-                });
-                 console.log("Part3:"+sqla+"\n");
-                request.query(sqla, function(err, data) {
-                    if(err){
-                        console.log("err3:"+err);
-                    }
-                    // console.log("recordset3:"+JSON.stringify(data));
-                    res.end(JSON.stringify(data),'utf-8'); // Result in JSON format
-                    sql.close();
-                });
+                console.log("recordset:"+JSON.stringify(data));
+                res.end(JSON.stringify(data),'utf-8'); // Result in JSON format 
             }  
-        });            
-    });
+            sql.close(); 
+        }); 
+    }); 
 });
