@@ -542,3 +542,27 @@ app.post('/patientinfo', function (req, res) {
         }); 
     }); 
 });
+
+/* 
+* 根据档案号获取该用户的通知消息
+*/
+app.get('/getnotice/:id', function (req, res) {
+    res.writeHead(200,{'Content-Type':'application/json;charset=utf-8'});//设置response编码为utf-8
+    var header = req.header('User-Agent');
+    if(header !== "application/sunseen-api"){
+		res.status(400).end('Bad Request.');
+    }
+    var id =  req.params.id;// 日期
+    sql.connect(sqlConfig, function() {
+        var request = new sql.Request();
+        var sqlc = "SELECT *  FROM  D智能提醒 where 档案号='"+id+"'";
+        request.query(sqlc, function(err, recordset) {
+            if(err){
+            	res.end(JSON.stringify(err),'utf-8')
+                console.log(err);
+            }
+            res.end(JSON.stringify(recordset),'utf-8'); // Result in JSON format
+            sql.close();
+        });
+    });
+});
