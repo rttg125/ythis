@@ -20,6 +20,20 @@ var sqlConfig = {
 	    idleTimeoutMillis: 3000
   }
 }
+// var sqlConfig = {
+//     user: 'sa',
+//     password: 'btEMJ6CZT58',
+//     server: 'localhost',
+//     database: 'ythis',
+//     // options:{
+//     //     encrypr: true
+//     // },    
+//     pool: {
+// 	    min: 0,
+// 	    max: 10,
+// 	    idleTimeoutMillis: 3000
+//   }
+// }
 function getDate() {
     var date = new Date();
     var seperator1 = "-";
@@ -40,8 +54,8 @@ function getDate() {
 var server = app.listen(8081, function () {
     var host = server.address().address
     var port = server.address().port
-
-    console.log("app listening at http://%s:%s", host, port)
+    var time = (new Date()).toLocaleString()
+    console.log("app listening at http://%s:%s in %s", host, port, time)
 });
 /* 
 * 获取所有的用户
@@ -552,10 +566,60 @@ app.get('/getnotice/:id', function (req, res) {
     if(header !== "application/sunseen-api"){
 		res.status(400).end('Bad Request.');
     }
-    var id =  req.params.id;// 日期
+    var id =  req.params.id;// 档案号
     sql.connect(sqlConfig, function() {
         var request = new sql.Request();
-        var sqlc = "SELECT *  FROM  D智能提醒 where 档案号='"+id+"'";
+        var sqlc = "SELECT * FROM  D智能提醒 where 档案号='"+id+"' ORDER BY 时间 DESC";
+        request.query(sqlc, function(err, recordset) {
+            if(err){
+            	res.end(JSON.stringify(err),'utf-8')
+                console.log(err);
+            }
+            res.end(JSON.stringify(recordset),'utf-8'); // Result in JSON format
+            sql.close();
+        });
+    });
+});
+
+/* 
+* 根据档案号获取该用户的就诊记录
+*/
+app.get('/getjzjl/:id', function (req, res) {
+    res.writeHead(200,{'Content-Type':'application/json;charset=utf-8'});//设置response编码为utf-8
+    var header = req.header('User-Agent');
+    if(header !== "application/sunseen-api"){
+		res.status(400).end('Bad Request.');
+    }
+    var id =  req.params.id;// 档案号
+    sql.connect(sqlConfig, function() {
+        var request = new sql.Request();
+        var sqlc = "SELECT    就诊号,  就诊时间, 病情诊断, 就诊医生,  就诊金额 "
+        +"FROM  w_mz就诊记录 where 档案号 = "+id+" order by 就诊时间 DESC ";
+        request.query(sqlc, function(err, recordset) {
+            if(err){
+            	res.end(JSON.stringify(err),'utf-8')
+                console.log(err);
+            }
+            res.end(JSON.stringify(recordset),'utf-8'); // Result in JSON format
+            sql.close();
+        });
+    });
+});
+
+/* 
+* 根据就诊号获取该用户的就诊记录明细
+*/
+app.get('/getjzmx/:id', function (req, res) {
+    res.writeHead(200,{'Content-Type':'application/json;charset=utf-8'});//设置response编码为utf-8
+    var header = req.header('User-Agent');
+    if(header !== "application/sunseen-api"){
+		res.status(400).end('Bad Request.');
+    }
+    var id =  req.params.id;// 就诊号
+    sql.connect(sqlConfig, function() {
+        var request = new sql.Request();
+        var sqlc = "SELECT 项目, 单价, 数量, 金额"
+        +" FROM w_mz明细项目 where 就诊序号 = "+id;
         request.query(sqlc, function(err, recordset) {
             if(err){
             	res.end(JSON.stringify(err),'utf-8')
